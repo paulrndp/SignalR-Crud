@@ -17,6 +17,7 @@
                              <td>${v.Category}</td>
                              <td>${v.Price}</td>
                              <td>${v.Qty}</td>
+                             <td class="text-center"><a href="../Products/Details?id=${v.Id}">Details | <a href="../Products/Edit?id=${v.Id}">Edit | <a href="../Products/Delete?id=${v.Id}">Delete</td>
                     </tr>`
                 })
                 $('#tableBody').html(tr);

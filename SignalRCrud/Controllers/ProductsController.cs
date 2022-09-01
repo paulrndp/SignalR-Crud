@@ -152,6 +152,7 @@ namespace SignalRCrud.Controllers
             }
 
             await _context.SaveChangesAsync();
+            await _signalrHub.Clients.All.SendAsync("LoadProducts");
             return RedirectToAction(nameof(Index));
         }
 
