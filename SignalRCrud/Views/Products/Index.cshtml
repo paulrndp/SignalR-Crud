@@ -4,12 +4,12 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>Product List</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<table class="table">
+@*<table class="table">
     <thead>
         <tr>
             <th>
@@ -49,5 +49,19 @@
             </td>
         </tr>
 }
+    </tbody>
+</table>*@
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Item</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Quantity</th>
+        </tr>
+    </thead>
+    <tbody id="tableBody">
+
     </tbody>
 </table>

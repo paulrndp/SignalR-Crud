@@ -5,18 +5,23 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+
 using SignalRCrud.Data;
 using SignalRCrud.Models;
+using SignalRCrud.Hubs;
 
 namespace SignalRCrud.Controllers
 {
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHubContext<SignalServer> _signalrHub;
 
-        public ProductsController(ApplicationDbContext context)
+        public ProductsController(ApplicationDbContext context, IHubContext<SignalServer> signalrHub)
         {
             _context = context;
+            _signalrHub = signalrHub;
         }
 
         // GET: Products
@@ -26,6 +31,12 @@ namespace SignalRCrud.Controllers
                           View(await _context.Product.ToListAsync()) :
                           Problem("Entity set 'ApplicationDbContext.Product'  is null.");
         }
+        [HttpGet]
+        public IActionResult GetProduct()
+        {
+            var res = _context.Product.ToList();
+            return Ok(res);
+        }
 
         public async Task<IActionResult> Details(int? id)
         {
@@ -33,14 +44,11 @@ namespace SignalRCrud.Controllers
             {
                 return NotFound();
             }
-
-            var products = await _context.Product
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var products = await _context.Product.FirstOrDefaultAsync(m => m.Id == id);
             if (products == null)
             {
                 return NotFound();
             }
-
             return View(products);
         }
 
@@ -57,6 +65,7 @@ namespace SignalRCrud.Controllers
             {
                 _context.Add(products);
                 await _context.SaveChangesAsync();
+                await _signalrHub.Clients.All.SendAsync("LoadProducts");
                 return RedirectToAction(nameof(Index));
             }
             return View(products);
@@ -79,9 +88,9 @@ namespace SignalRCrud.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Item,Category,Price,Qty")] Products products)
+        public async Task<IActionResult> Edit(int Id, [Bind("Id,Item,Category,Price,Qty")] Products products)
         {
-            if (id != products.Id)
+            if (Id != products.Id)
             {
                 return NotFound();
             }
@@ -92,6 +101,8 @@ namespace SignalRCrud.Controllers
                 {
                     _context.Update(products);
                     await _context.SaveChangesAsync();
+                    await _signalrHub.Clients.All.SendAsync("LoadProducts");
+
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -116,13 +127,11 @@ namespace SignalRCrud.Controllers
                 return NotFound();
             }
 
-            var products = await _context.Product
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var products = await _context.Product.FirstOrDefaultAsync(m => m.Id == id);
             if (products == null)
             {
                 return NotFound();
             }
-
             return View(products);
         }
 
@@ -138,8 +147,10 @@ namespace SignalRCrud.Controllers
             if (products != null)
             {
                 _context.Product.Remove(products);
+                await _signalrHub.Clients.All.SendAsync("LoadProducts");
+
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
